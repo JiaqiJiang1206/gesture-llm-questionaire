@@ -1,0 +1,719 @@
+<template>
+	<div class="container">
+		<div class="column_left">
+			<div class="one_block_left" style="margin-top: 2%">
+				<div
+					class="green-card-instruction"
+					style="
+						padding-left: 2%;
+						font-size: 16px;
+						margin-top: 2%;
+						margin-bottom: 2%;
+					"
+				>
+					📄视频录制说明：<br />
+					1️⃣ 练习直到满意 <br />
+					2️⃣ 点击开始录制，我们有三秒的倒计时321 <br />
+					3️⃣ 表演动作，加上台词 <br />
+					4️⃣ 点击停止录制 <br />
+					5️⃣ 满意就点提交，不满意就点重录<br />
+				</div>
+			</div>
+			<div class="one_block_left">
+				<p style="padding-left: 2%; font-size: 18px; font-weight: bold">
+					👇请念出下方教学文本并模仿教师手势，再填写右侧问卷<br />
+				</p>
+			</div>
+			
+			<div class="one_block_left">
+				<p
+					id="text_content"
+					style="padding-left: 2%; font-size: 18px; font-weight: bold"
+				>
+					{{ teaching_text }}<br />
+				</p>
+			</div>
+			<div class="video-wrapper form-element">
+				<video
+					id="videoPlayer"
+					controls
+					:src="teacher_video"
+					style="width: 95%; height: 100%; padding-left: 6%"
+				></video>
+			</div>
+		</div>
+		<div class="column_right" style="padding-left: 8%">
+			<bodyRecognize v-if="showFlag" @complete-body-record="switchShow" />
+			<!-- 表单 -->
+			<form v-else class="form-element">
+				<div
+					style="
+						display: flex;
+						overflow: scroll;
+						flex-direction: column;
+						max-height: 80vh;
+						padding: 1%;
+					"
+				>
+					<!-- 开始词与结束词 -->
+					<div class="one_block">
+						<h2 style="font-size: 18px; font-weight: bold; padding: 0.3% 0%">
+							❇️选择手势起始时对应的字与结束时对应的字 ：
+						</h2>
+						<wordSelect
+							:words="teaching_text"
+							v-model="startAndEndIndex"
+						></wordSelect>
+					</div>
+
+					<!-- 手势形式 -->
+					<div class="one_block">
+						<div style="padding: 2% 0%; padding-top: 3.5%">
+							<p style="font-size: 18px; font-weight: bold; display: inline">
+								❇️请尽可能详细地描述视频中教师的手势 : <br />
+							</p>
+							<p
+								style="
+									display: inline;
+									text-align: left;
+									font-weight: lighter;
+									font-size: 14px;
+								"
+							>
+								例1：左手放在原位，右手食指伸出，在空中点击三下。<br />例2：双手十指交叉放在胸前。
+							</p>
+						</div>
+						<voice-button v-model="gesForm"></voice-button>
+					</div>
+
+					<!-- 手势理由 -->
+					<div class="one_block">
+						<div style="padding: 2% 0%; padding-top: 3.5%">
+							<p style="font-size: 18px; font-weight: bold; display: inline">
+								❇️您认为教师为什么选择使用这样的手势 : <br />
+							</p>
+						</div>
+						<voice-button v-model="gesReason"></voice-button>
+					</div>
+					<!-- 具身选择 -->
+					<!-- 单手还是双手 -->
+					<div class="one_block">
+						<div style="padding: 2% 0%; padding-top: 3.5%">
+							<p style="font-size: 18px; font-weight: bold; display: inline">
+								❇️这个手势是用单手还是双手完成的？<br />
+							</p>
+						</div>
+						<input
+							type="radio"
+							id="ok"
+							name="choice1"
+							value="单手"
+							class="singleoptionkx-input"
+						/>
+						<label class="singleoptionkx" for="ok" @click="selectHand"
+							>单手</label
+						>
+
+						<input
+							type="radio"
+							id="no-ok"
+							name="choice1"
+							value="双手"
+							class="singleoptionkx-input"
+						/>
+						<label class="singleoptionkx" for="no-ok" @click="selectHand"
+							>双手</label
+						>
+					</div>
+					<!-- 是否拿着物品 -->
+					<div class="one_block">
+						<div style="padding: 2% 0%; padding-top: 3.5%">
+							<p style="font-size: 18px; font-weight: bold; display: inline">
+								❇️教师手中是否拿着物品？<br />
+							</p>
+						</div>
+						<input
+							type="radio"
+							id="no-object"
+							name="choice3"
+							value="未拿物品"
+							class="singleoptionkx-input"
+						/>
+						<label class="singleoptionkx" for="no-object" @click="inputObject"
+							>未拿物品</label
+						>
+
+						<input
+							type="radio"
+							id="have-object"
+							name="choice3"
+							value="拿着物品"
+							class="singleoptionkx-input"
+						/>
+						<label class="singleoptionkx" for="have-object" @click="inputObject"
+							>拿着物品
+						</label>
+						<div v-if="showMultipleSelect">
+							<label for="dependency">请选择所拿的物品：</label>
+							<br />
+							<input type="checkbox" id="mic" />
+							<label for="mic">麦克风</label><br />
+
+							<input type="checkbox" id="book" />
+							<label for="book">书本</label><br />
+
+							<input type="checkbox" id="pen" />
+							<label for="pen">笔</label><br />
+
+							<input type="checkbox" id="others" />
+							<label for="others">其他</label><br />
+						</div>
+					</div>
+					<!-- 是否依赖物品 -->
+					<div class="one_block">
+						<div style="padding: 2% 0%; padding-top: 3.5%">
+							<p style="font-size: 18px; font-weight: bold; display: inline">
+								❇️这个手势是否依赖教室中的某件物品？<br />
+							</p>
+						</div>
+						<input
+							type="radio"
+							id="dependency"
+							name="choice2"
+							value="依赖"
+							class="singleoptionkx-input"
+						/>
+						<label
+							class="singleoptionkx"
+							for="dependency"
+							@click="selectDependency"
+							>依赖</label
+						>
+
+						<input
+							type="radio"
+							id="no-dependency"
+							name="choice2"
+							value="不依赖"
+							class="singleoptionkx-input"
+						/>
+						<label
+							class="singleoptionkx"
+							for="no-dependency"
+							@click="selectDependency"
+							>不依赖</label
+						>
+						<div v-if="ifDependency">
+							<br />
+							<label for="dependency">如果依赖，请输入所依赖的物品：</label>
+							<input
+								type="text"
+								id="obj"
+								style="width: 95%; height: 30px; font-size: 16px"
+							/>
+						</div>
+					</div>
+					<!-- 任务负荷量 -->
+					<div class="one_block">
+						<div style="padding: 2% 0%; padding-top: 3.5%">
+							<p style="font-size: 18px; font-weight: bold; display: inline">
+								❇️任务负荷量表<br />
+							</p>
+						</div>
+						<div class="slider-container">
+							<label>体力需求<br /></label>
+							<p style="font-size: 14px; display: inline; margin-top: 3px">
+								请您选择：完成这项手势需要多少体力活动？任务是轻松还是艰巨、缓慢还是轻快、松弛还是剧烈、休息还是劳累？<br />
+							</p>
+
+							<div
+								class="slider-container1"
+								id="sliderContainer1"
+								@click="handleSlider"
+							>
+								<div class="slider" id="slider"><br /></div>
+								<span id="sliderValue">0</span>
+							</div>
+
+							<div
+								class="slider-labels"
+								style="display: flex; justify-content: space-between"
+							>
+								<span style="border: none">非常低</span>
+								<span style="border: none">非常高</span>
+							</div>
+						</div>
+					</div>
+					<div class="button_container">
+						<button @click.prevent="next_page" class="next_button" id="next">
+							下一个
+						</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</template>
+
+<script setup>
+	import voiceButton from "@/components/voiceButton.vue";
+	import wordSelect from "@/components/wordSelect.vue";
+	import { onMounted, ref } from "vue";
+	// 获取数据
+	import axios from "axios";
+	import { useRouter } from "vue-router";
+	import {
+		userGlobalName,
+		currentDataText,
+		currentDataIndex,
+	} from "@/stores/store";
+	import bodyRecognize from "@/components/bodyRecognize.vue";
+
+	let showFlag = ref(true);
+	let showMultipleSelect = ref(false);
+
+	function switchShow() {
+		console.log("提交录制结果，切换显示。");
+		showFlag.value = !showFlag.value;
+	}
+
+	// 获取用户的名字
+	const userName = userGlobalName.value;
+
+	const router = useRouter();
+	let formData = {};
+	let teaching_text = ref("");
+	let teacher_video = ref("");
+	let temp = "";
+
+	// 获取并解析数据
+	axios.get("https://teachernonverbal.asia/data").then((res) => {
+		// 传输过来的数据是一个对象
+		formData = res.data;
+		console.log(formData);
+		// 去掉 formData.text 中的空格
+		temp = formData.text.replace(/\s+/g, "");
+		teaching_text.value = temp;
+		// 转换 base64 编码的视频为视频路径
+		currentDataText.value = temp; // 传递数据到 store
+		currentDataIndex.value = formData.id;
+		teacher_video.value = base64UrlToFile(
+			formData.video,
+			"video.mp4",
+			"video/mp4"
+		);
+	});
+
+	// 选择的开始词索引和结束词索引
+	const startAndEndIndex = ref({ startIndex: -1, endIndex: -1 });
+	let startWord = "";
+	let endWord = "";
+
+	// 手势形式和手势理由
+	const gesForm = ref("");
+	const gesReason = ref("");
+
+	// 一只手还是两只手
+	let oneOrTwoHand = "";
+	function selectHand(event) {
+		console.log(event.target.innerText);
+		oneOrTwoHand = event.target.innerText;
+	}
+
+	// 是否拿着物品以及拿了什么物品
+	let whatObject = [];
+	let inputObjectFlag = false; // 判断 inputObject 事件是否触发
+	function inputObject(event) {
+		inputObjectFlag = true;
+		console.log(event.target.innerText);
+		let temp = event.target.innerText;
+		if (temp === "拿着物品") {
+			showMultipleSelect.value = true; //
+		} else {
+			showMultipleSelect.value = false;
+			whatObject = [];
+		}
+	}
+
+	// 是否依赖物品以及依赖什么物品
+	let ifDependency = ref(false);
+	let inputDependencyFlag = false; // 判断 inputDependency 事件是否触发
+	function selectDependency(event) {
+		inputDependencyFlag = true;
+		console.log(event.target.innerText);
+		let temp = event.target.innerText;
+		if (temp === "依赖") {
+			ifDependency.value = true;
+		} else {
+			ifDependency.value = false;
+		}
+	}
+
+	// 任务负荷
+	let taskLoad = 0;
+
+	// 点击下一个按钮需要处理的逻辑
+	let curPage = 0;
+	function next_page() {
+		console.log("startAndEndIndex", startAndEndIndex.value);
+		startWord = teaching_text.value[startAndEndIndex.value.startIndex];
+		endWord = teaching_text.value[startAndEndIndex.value.endIndex];
+		console.log("开始词", startWord);
+		console.log("结束词", endWord);
+		console.log("手势描述", gesForm.value);
+		console.log("手势理由", gesReason.value);
+		// 打印出当前元素位于列表中第几位
+
+		// 循环查找拿着的物品中 checkbox 为 true 的物品放入数组中
+		let checkboxes = document.querySelectorAll("input[type=checkbox]");
+		checkboxes.forEach((checkbox) => {
+			if (checkbox.checked) {
+				whatObject.push(checkbox.nextElementSibling.innerText);
+			}
+		});
+
+		// 判断是否填写完整
+
+		if (
+			gesForm.value === "" ||
+			gesReason.value === "" ||
+			startWord === "" ||
+			endWord === "" ||
+			// 判断是否选择了单手或双手
+			oneOrTwoHand === "" ||
+			// 判断是否选择了是否拿着物品
+			!inputObjectFlag ||
+			// 如果拿着物品，判断是否选择了所拿的物品
+			(showMultipleSelect.value && whatObject.length === 0) ||
+			// 判断是否选择了是否依赖物品
+			!inputDependencyFlag ||
+			// 如果依赖物品，判断是否输入了依赖的物品
+			(ifDependency.value && document.getElementById("obj").value === "")
+		) {
+			alert("请填写完整的问卷再点击下一个");
+		} else {
+			// 发送数据到服务端
+			const tobesent = {
+				id: currentDataIndex.value,
+				text: formData.text,
+				user: userName,
+				start_end_word: [startWord, endWord],
+				description: gesForm.value,
+				reason: gesReason.value,
+				oneOrTwoHand: oneOrTwoHand,
+				object: whatObject,
+				dependencyObject: ifDependency.value
+					? document.getElementById("obj").value
+					: "null",
+				taskLoad: taskLoad,
+			};
+			console.log(tobesent);
+			// 发送数据
+			axios
+				.post(
+					"https://teachernonverbal.asia/submit",
+					JSON.stringify(tobesent),
+					{
+						headers: {
+							"Content-Type": "application/json",
+						},
+					}
+				)
+				.then((res) => {
+					console.log(res.data);
+					// 清空数据
+					gesForm.value = "";
+					gesReason.value = "";
+					startAndEndIndex.value = { startIndex: -1, endIndex: -1 };
+					showFlag.value = !showFlag.value;
+					whatObject = [];
+					showMultipleSelect.value = false;
+					inputObjectFlag = false;
+					inputDependencyFlag = false;
+					ifDependency.value = false;
+					oneOrTwoHand = "";
+					// 任务负荷量
+					taskLoad = 0;
+					sliderValue.innerHTML = 0;
+					// 清除选项状态
+					document.querySelectorAll("input[type=radio]").forEach((radio) => {
+						radio.checked = false;
+					});
+					document
+						.querySelectorAll("input[type=checkbox]")
+						.forEach((checkbox) => {
+							checkbox.checked = false;
+						});
+
+					// 下一页
+					curPage++;
+					console.log("当前页数", curPage);
+					if (curPage === 30) {
+						router.push({
+							path: "/endPage",
+						});
+					} else {
+						// 切换到下一个数据
+						// 获取并解析数据
+						setTimeout(() => {
+							// 为了等待数据加载完成
+							axios.get("https://teachernonverbal.asia/data").then((res) => {
+								// 传输过来的数据是一个对象
+								formData = res.data;
+								console.log(formData);
+								// 去掉 formData.text 中的空格
+								temp = formData.text.replace(/\s+/g, "");
+								teaching_text.value = temp;
+								currentDataText.value = temp; // 传递数据到 store
+								currentDataIndex.value = formData.id;
+								// 转换 base64 编码的视频为视频路径
+
+								teacher_video.value = base64UrlToFile(
+									formData.video,
+									"video.mp4",
+									"video/mp4"
+								);
+							});
+						}, 500);
+					}
+				});
+		}
+	}
+	// 将 base64 转为视频文件
+	function base64UrlToFile(base64Data, filename, type) {
+		var byteArray = [];
+		var contentType = type || "video/mp4";
+		var byteArray = atob(base64Data); // 去除"data:type/subtype;base64,"部分，只处理base64编码部分
+		var arrayBuffer = new Uint8Array(byteArray.length);
+		for (var i = 0; i < byteArray.length; i++) {
+			arrayBuffer[i] = byteArray.charCodeAt(i);
+		}
+		var blob = new Blob([arrayBuffer], { type: contentType });
+		let file = new File([blob], filename, { type: contentType });
+		let videoUrl = URL.createObjectURL(file);
+		console.log(videoUrl);
+		return videoUrl;
+	}
+	// 具身数据处理逻辑
+	// 可否单手 任务负荷 依赖
+
+	function handleSlider(event) {
+		var sliderContainer = document.getElementById("sliderContainer1");
+		var slider = document.getElementById("slider");
+		var sliderValue = document.getElementById("sliderValue");
+
+		var numSteps = 21;
+		let currentStep = 0;
+
+		if (sliderContainer) {
+			function updateSliderPosition() {
+				var stepWidth = sliderContainer.clientWidth / numSteps;
+				var newPosition = currentStep * stepWidth;
+				slider.style.width = newPosition + "px";
+				sliderValue.innerHTML = currentStep;
+				taskLoad = sliderValue.innerHTML;
+				console.log(taskLoad);
+			}
+			var clickX = event.clientX - sliderContainer.getBoundingClientRect().left;
+			var stepWidth = sliderContainer.clientWidth / numSteps;
+			var newStep = Math.round(clickX / stepWidth);
+			if (newStep >= 0 && newStep <= numSteps) {
+				currentStep = newStep;
+				updateSliderPosition();
+				// console.log("当前刻度值：" + currentStep);
+			}
+		}
+	}
+
+	onMounted(() => {
+		handleSlider();
+	});
+</script>
+
+<style>
+	/* Your CSS goes here */
+	.container {
+		display: grid;
+		grid-template-columns: minmax(25%, 45%) 1fr;
+		padding-top: 2.5%;
+		width: 100%;
+	}
+
+	.one_block_left {
+		width: 92%;
+		border: 0.2px solid #60744879;
+		background-color: #fff;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		transition: box-shadow 0.3s ease;
+		border-radius: 5px;
+		margin-bottom: 2%;
+		margin-left: 6%;
+		padding-left: 3.5%;
+		text-align: left;
+	}
+
+	/* 隐藏原始的单选按钮 */
+	.one_block input[type="radio"] {
+		position: absolute;
+		opacity: 0;
+		width: 0;
+		height: 0;
+	}
+
+	.option {
+		cursor: pointer;
+		display: inline-block;
+		padding: 5px 5px;
+		margin-right: 5px;
+		border: 1px solid #607448;
+		border-radius: 5px;
+	}
+
+	.option:hover {
+		background-color: lightgray;
+		cursor: pointer;
+		font-weight: bold;
+		color: black;
+	}
+
+	/* 设置选中时的样式 */
+	.single_options input[type="radio"]:checked + .option {
+		background-color: #607448;
+		color: #fff;
+	}
+
+	/* 样式化外围的边框 */
+
+	.one_block {
+		width: 80%;
+		padding-bottom: 2%;
+		padding-top: 0%;
+		padding-left: 6%;
+		border: 0.2px solid #60744879;
+		background-color: #fff;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		transition: box-shadow 0.3s ease;
+		border-radius: 5px;
+		margin-bottom: 2%;
+		text-align: left;
+	}
+
+	.text_block {
+		width: 100%;
+		padding-bottom: 1%;
+		padding-top: 1%;
+		/* padding-left: 6%; */
+		border: 0.2px solid #60744879;
+		background-color: #fff;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		transition: box-shadow 0.3s ease;
+		border-radius: 5px;
+		margin-bottom: 2%;
+	}
+
+	.button_container {
+		display: flex;
+		justify-content: center;
+		width: 85%;
+	}
+
+	.next_button {
+		background-color: #607448;
+		color: white;
+		border: none;
+		padding: 1.5%;
+		padding-left: 6%;
+		text-align: center;
+		font-size: 16px;
+		cursor: pointer;
+		border-radius: 5px;
+		width: 100%;
+	}
+
+	.column_left {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	/* 具身选择的样式 */
+	/* 设置选中时的样式 */
+	.singleoptionkx {
+		display: inline-block;
+		border: 1px solid #607448;
+		padding: 1%;
+		border-radius: 8px;
+	}
+
+	.singleoptionkx:hover {
+		background-color: lightgray;
+		cursor: pointer;
+		font-weight: bold;
+		color: black;
+	}
+
+	.singleoptionkx-input:checked + .singleoptionkx {
+		background-color: #607448;
+		color: #fff;
+	}
+
+	.multioptionkx:hover {
+		background-color: lightgray;
+		cursor: pointer;
+		font-weight: bold;
+		color: black;
+	}
+	.slider-container1 {
+		width: 100%; /* 容器宽度 */
+		height: 20px; /* 更新容器高度 */
+		background-color: #e0e0e0; /* 灰色背景 */
+		background: repeating-linear-gradient(
+			to right,
+			#000 0%,
+			#000 1px,
+			transparent 1px,
+			transparent 5%
+		); /* 黑色刻度线作为背景 */
+		position: relative;
+		cursor: pointer;
+		overflow: hidden; /* 防止内容溢出 */
+	}
+
+	.slider {
+		height: 6px; /* 更新滑动条高度 */
+		background: #607448; /* 滑动条颜色 */
+		transition: width 0.3s;
+		position: absolute;
+		bottom: 7px; /* 更新垂直位置，以垂直居中滑动条 */
+		z-index: 1; /* 确保滑动条在最前面 */
+	}
+
+	#sliderValue {
+		position: absolute;
+		top: -50%;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 2; /* 保证可见度 */
+	}
+	.slider-container {
+		margin: 10px 0; /* 减少上下边距 */
+		display: flex;
+		flex-direction: column;
+		align-items: left;
+	}
+
+	.choices {
+		display: flex;
+		flex-grow: 1;
+		justify-content: space-around;
+	}
+
+	.choices label {
+		margin: 0 1px; /* 减少单选按钮之间的间距 */
+	}
+	.result-card-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+</style>
