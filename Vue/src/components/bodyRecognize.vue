@@ -1,10 +1,12 @@
 <template>
 	<div class="body-container">
 		<div class="body_button_container">
+			<button id="webcamButton" @click="toggleExersizeWebcam">
+				{{ exersizeButton }}
+			</button>
 			<button id="webcamButton" @click="toggleWebcam">
 				{{ buttonText }}
 			</button>
-
 			<button
 				id="nextButton"
 				@click="$emit('complete-body-record')"
@@ -32,7 +34,7 @@
 	import "../assets/handposejs/hands";
 	import "../assets/handposejs/pose";
 	// 导入数据收发相关
-	import axios from "axios";
+	import axios from "../api/axios";
 	// 导入全局数据
 	import {
 		userGlobalName,
@@ -56,6 +58,7 @@
 	// 定义响应式数据
 	let webcamRunning = ref(false);
 	let buttonText = ref("开始录制");
+	let exersizeButton = ref("开始练习");
 	let ifSubmitButton = ref("none"); // 是否显示提交按钮
 	let video = ref(null);
 	let canvasElement = ref(null);
@@ -144,7 +147,6 @@
 				); // Clear the canvas
 
 				console.log("第" + counts + "次录制开始");
-				document.getElementById("webcamButton").style.display = "block"; // 显示按钮
 				activateWebcamAndRecord(); // 激活摄像头并开始录制
 			}
 		}
@@ -183,11 +185,12 @@
 				};
 			});
 		// 显示画布以及启动定时器的其余代码
+		// 一秒钟记录一次
 		bodyRecognizeTimer = setInterval(() => {
-			if (oneHand && theOtherHand && pose) {
+			if (oneHand || theOtherHand || pose) {
 				sendPoseDataToDerver(oneHand, theOtherHand, pose);
 			}
-		}, 1000);
+		}, 500);
 	}
 
 	// 点击按钮，开始录制或结束录制
@@ -247,6 +250,60 @@
 			toggleButtonText(); // 切换按钮文字：开始录制 -> 停止录制
 			// 当摄像头没有运行时，点击按钮会开始录制
 			startCountdownAndRecording();
+			
+		}
+	}
+
+	function toggleExersizeWebcam(event) {
+		// 点击开始录制与结束录制按钮后视觉元素发生的变化
+		function toggleButtonText() {
+			if (webcamRunning.value === true) {
+				exersizeButton.value = "停止练习";
+				document.getElementById("webcamButton").style.backgroundColor = "white";
+				document.getElementById("webcamButton").style.color = "#607448";
+				document.getElementById("webcamButton").style.border = "solid";
+			} else {
+				exersizeButton.value = "再次练习";
+				document.getElementById("webcamButton").style.backgroundColor =
+					"#607448";
+				document.getElementById("webcamButton").style.color = "white";
+				document.getElementById("webcamButton").style.border = "solid";
+			}
+		}
+		if (!handLandmarker) {
+			alert("Hand Landmarker is not loaded yet!");
+			return;
+		}
+		// 当摄像头正在运行时，点击按钮会停止录制
+		if (webcamRunning.value === true) {
+			webcamRunning.value = false;
+			console.log("第" + counts + "次练习结束");
+			toggleButtonText(); // 切换按钮文字：停止录制 -> 开始录制
+			// 关闭摄像头
+			if (video.value.srcObject) {
+				video.value.srcObject.getVideoTracks().forEach((track) => {
+					track.stop();
+				});
+				// 清除画布
+				canvasCtx.value.clearRect(
+					0,
+					0,
+					canvasElement.value.width,
+					canvasElement.value.height
+				);
+				// 隐藏画布
+				// canvasElement.value.style.display = "none";
+
+				// 清除计时器
+				window.clearInterval(bodyRecognizeTimer);
+				window.cancelAnimationFrame(animatedFrameId);
+			}
+		} else {
+			webcamRunning.value = true; // 切换摄像头状态
+			ifSubmitButton.value = "none"; // 隐藏提交按钮
+			document.getElementById("webcamButton").style.display = "none"; // 隐藏按钮
+			toggleButtonText(); // 切换按钮文字：开始练习 -> 停止练习
+			activateWebcamAndRecord(); // 激活摄像头并开始录制
 		}
 	}
 
@@ -330,7 +387,8 @@
 		console.log("currentDataText.value: ", currentDataText.value);
 		// 将数据发送到服务器
 		axios
-			.post("https://teachernonverbal.asia/savePoseData", {
+			// .post("https://teachernonverbal.asia/savePoseData", {
+			.post("/savePoseData", {
 				counts: counts,
 				userName: userGlobalName.value,
 				currentDataText: currentDataText.value,
@@ -340,7 +398,7 @@
 				PoseData: PoseData,
 			})
 			.then((res) => {
-				console.log(res.data);
+				console.log("发过去啦");
 			})
 			.catch((err) => {
 				console.log(err);

@@ -24,7 +24,7 @@
 					👇请念出下方教学文本并模仿教师手势，再填写右侧问卷<br />
 				</p>
 			</div>
-			
+
 			<div class="one_block_left">
 				<p
 					id="text_content"
@@ -260,7 +260,7 @@
 	import wordSelect from "@/components/wordSelect.vue";
 	import { onMounted, ref } from "vue";
 	// 获取数据
-	import axios from "axios";
+	import axios from "../api/axios";
 	import { useRouter } from "vue-router";
 	import {
 		userGlobalName,
@@ -287,7 +287,8 @@
 	let temp = "";
 
 	// 获取并解析数据
-	axios.get("https://teachernonverbal.asia/data").then((res) => {
+	// axios.get("https://teachernonverbal.asia/data").then((res) => {
+	axios.get("/data").then((res) => {
 		// 传输过来的数据是一个对象
 		formData = res.data;
 		console.log(formData);
@@ -411,7 +412,8 @@
 			// 发送数据
 			axios
 				.post(
-					"https://teachernonverbal.asia/submit",
+					// "https://teachernonverbal.asia/submit",
+					"/submit",
 					JSON.stringify(tobesent),
 					{
 						headers: {
@@ -457,7 +459,7 @@
 						// 获取并解析数据
 						setTimeout(() => {
 							// 为了等待数据加载完成
-							axios.get("https://teachernonverbal.asia/data").then((res) => {
+							axios.get("/data").then((res) => {
 								// 传输过来的数据是一个对象
 								formData = res.data;
 								console.log(formData);

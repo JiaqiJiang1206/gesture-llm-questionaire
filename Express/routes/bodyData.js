@@ -8,6 +8,7 @@ let preCount = 0;
 
 router.post("/savePoseData", function (req, res, next) {
 	try {
+        console.log('save data');
 		// 处理收到的数据
 		JsonData = req.body; // 收到的数据格式为 JSON，是个对象
         let count = JsonData.counts;
