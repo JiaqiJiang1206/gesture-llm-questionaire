@@ -4,7 +4,7 @@
             <p>感谢参与！</p >
         </div>
     </div>
-    <div style="position: absolute; top: 70%; right:30%; width:50%; height:10%;">
+    <!-- <div style="position: absolute; top: 70%; right:30%; width:50%; height:10%;">
         <div class="firework" style="left: 50%; top: 50%;"></div>
         <div class="firework" style="left: 40%; top: 40%; background-color: #00ff00;"></div>
         <div class="firework" style="left: 60%; top: 60%; background-color: #0000ff;"></div>
@@ -13,11 +13,12 @@
         <div class="firework" style="left: 80%; top: 20%; background-color: #00fffb;"></div>
         <div class="firework" style="left: 90%; top: 10%; background-color: rgb(154, 239, 8);"></div>
         <div class="firework" style="left: 70%; top: 0%; background-color: #483b9c;"></div>
-    </div>
+    </div> -->
+    <vue-confetti></vue-confetti>
 </template>
   
 <script>
-
+import vueConfetti from 'vue-confetti'
 </script>
   
 <style>

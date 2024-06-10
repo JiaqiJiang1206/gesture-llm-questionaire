@@ -102,6 +102,9 @@
 	textarea {
 		width: 95%;
 		font-size: 16px;
+		border: solid;
+		border-radius: 6px;
+		border-color: #607448;
 	}
 
 	.image-container {

@@ -1,6 +1,11 @@
 <template>
-	<div class="container">
+	<div class="container" style="max-width: 100vw;">
 		<div class="column_left">
+			<div class="one_block_left">
+				<p style="padding-left: 2%; font-size: 18px; font-weight: bold">
+					👇请模仿并录制视频中教师手势，提交录制后填写问卷<br />
+				</p>
+			</div>
 			<div class="one_block_left" style="margin-top: 2%">
 				<div
 					class="green-card-instruction"
@@ -12,25 +17,19 @@
 					"
 				>
 					📄视频录制说明：<br />
-					1️⃣ 练习直到满意 <br />
+					1️⃣ 练习直到满意，练习与录制时请让上半身（包含头部与手部）出现在镜头中，您与摄像头需要保持约一臂的距离 <br />
 					2️⃣ 点击开始录制，我们有三秒的倒计时321 <br />
-					3️⃣ 表演动作，加上台词 <br />
+					3️⃣ 模仿视频中教师的行为：包含教师所说的话与教师的动作 <br />
 					4️⃣ 点击停止录制 <br />
-					5️⃣ 满意就点提交，不满意就点重录<br />
+					5️⃣ 满意请点击提交，不满意可点击重录<br />
 				</div>
 			</div>
-			<div class="one_block_left">
-				<p style="padding-left: 2%; font-size: 18px; font-weight: bold">
-					👇请念出下方教学文本并模仿教师手势，再填写右侧问卷<br />
-				</p>
-			</div>
-
 			<div class="one_block_left">
 				<p
 					id="text_content"
 					style="padding-left: 2%; font-size: 18px; font-weight: bold"
 				>
-					{{ teaching_text }}<br />
+					{{ "“" + teaching_text + "”" }}<br />
 				</p>
 			</div>
 			<div class="video-wrapper form-element">
@@ -38,9 +37,10 @@
 					id="videoPlayer"
 					controls
 					:src="teacher_video"
-					style="width: 95%; height: 100%; padding-left: 6%"
+					style="width: 100%; height: 100%; padding-left: 6%"
 				></video>
 			</div>
+			
 		</div>
 		<div class="column_right" style="padding-left: 8%">
 			<bodyRecognize v-if="showFlag" @complete-body-record="switchShow" />
@@ -58,7 +58,7 @@
 					<!-- 开始词与结束词 -->
 					<div class="one_block">
 						<h2 style="font-size: 18px; font-weight: bold; padding: 0.3% 0%">
-							❇️选择手势起始时对应的字与结束时对应的字 ：
+							❇️选择视频中教师手势起始时对应的字与结束时对应的字 ：
 						</h2>
 						<wordSelect
 							:words="teaching_text"
@@ -256,18 +256,18 @@
 </template>
 
 <script setup>
-	import voiceButton from "@/components/voiceButton.vue";
-	import wordSelect from "@/components/wordSelect.vue";
+	import voiceButton from "../components/voiceButton.vue";
+	import wordSelect from "../components/wordSelect.vue";
 	import { onMounted, ref } from "vue";
 	// 获取数据
 	import axios from "../api/axios";
 	import { useRouter } from "vue-router";
 	import {
-		userGlobalName,
+		userGlobalData,
 		currentDataText,
 		currentDataIndex,
-	} from "@/stores/store";
-	import bodyRecognize from "@/components/bodyRecognize.vue";
+	} from "../stores/store";
+	import bodyRecognize from "../components/bodyRecognize.vue";
 
 	let showFlag = ref(true);
 	let showMultipleSelect = ref(false);
@@ -278,7 +278,7 @@
 	}
 
 	// 获取用户的名字
-	const userName = userGlobalName.value;
+	const userName = userGlobalData.value.name;
 
 	const router = useRouter();
 	let formData = {};
@@ -452,7 +452,7 @@
 					console.log("当前页数", curPage);
 					if (curPage === 30) {
 						router.push({
-							path: "/endPage",
+							path: "/endPage"
 						});
 					} else {
 						// 切换到下一个数据
@@ -532,13 +532,12 @@
 	});
 </script>
 
-<style>
+<style scoped>
 	/* Your CSS goes here */
 	.container {
 		display: grid;
-		grid-template-columns: minmax(25%, 45%) 1fr;
-		padding-top: 2.5%;
-		width: 100%;
+		grid-template-columns: minmax(40%, 45%) 1fr;
+		padding-top: 2%;
 	}
 
 	.one_block_left {
@@ -550,7 +549,7 @@
 		border-radius: 5px;
 		margin-bottom: 2%;
 		margin-left: 6%;
-		padding-left: 3.5%;
+		padding: 2%;
 		text-align: left;
 	}
 
@@ -587,9 +586,9 @@
 	/* 样式化外围的边框 */
 
 	.one_block {
-		width: 80%;
+		width: 85%;
 		padding-bottom: 2%;
-		padding-top: 0%;
+		padding-top: 2%;
 		padding-left: 6%;
 		border: 0.2px solid #60744879;
 		background-color: #fff;

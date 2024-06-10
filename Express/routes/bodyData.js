@@ -4,10 +4,11 @@ const path = require("path");
 let router = express.Router();
 let bodyData;
 let bodyStringData;
-let preCount = 0;
+let preCount;
 
 router.post("/savePoseData", function (req, res, next) {
 	try {
+        preCount = 0;
         console.log('save data');
 		// 处理收到的数据
 		JsonData = req.body; // 收到的数据格式为 JSON，是个对象
@@ -22,13 +23,16 @@ router.post("/savePoseData", function (req, res, next) {
         JsonData.presentTime = presentTime;
         bodyStringData = JSON.stringify(JsonData, null, 2); // 将 JSON 对象转为字符串
 		let currentIndex = JsonData.id;
-        
+        // console.log(bodyStringData);
 		if (bodyStringData) {
 			// 定义文件名
             const fileName = "bodyData/" + userNameString + "_" + currentIndex + ".json";
             // 如果当前计数器比之前的大，说明重新录制过
+            // console.log(count);
+            // console.log(preCount);
             if(count > preCount){
                 preCount = count;
+                console.log('counts大于');
                 // 清空文件中内容
                 fs.writeFile(fileName, "", (err) => {
                     if(err){

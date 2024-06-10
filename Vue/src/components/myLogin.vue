@@ -1,19 +1,25 @@
 <template>
 	<div id="before-login">
 		<div id="icon-wrapper">
-			<img
-				id="icon"
-				src="../assets/img/ruler.png"
-			/><!-- 使用图片作为 icon -->
+			<img id="icon" src="../assets/img/ruler.png" /><!-- 使用图片作为 icon -->
 			<div id="line"></div>
 			<!-- 添加连接线 -->
 		</div>
-		<h2>Login</h2>
-		<input
-			type="text"
-			v-model="userInput"
-			placeholder="请输入姓名"
-		/>
+		<!-- <h1>Login</h1> -->
+		<input type="text" v-model="userInput" placeholder="请输入姓名" />
+		
+		<input type="text" v-model="contactInput" placeholder="请输入联系方式" />
+		
+		<select v-model="selectGender">
+			<option v-for="option in gender" :key="option" :value="option">{{ option }}</option>
+		</select>
+		
+		<input type="number" v-model="ageInput" placeholder="请输入年龄" />
+		
+		<input type="text" v-model="gradeInput" placeholder="请输入所教年级，如：小学三年级" />
+		
+		<input v-model="coursesInput" placeholder="请输入所教课程，如：英语"></input>
+		
 		<button @click="login">登录</button>
 	</div>
 </template>
@@ -21,20 +27,49 @@
 <script setup>
 	import { ref } from "vue";
 	import { useRouter } from "vue-router";
-	import { userGlobalName } from "@/stores/store";
+	import { userGlobalData } from "../stores/store";
+	import axios from "../api/axios";
 	let userInput = ref("");
-	const router = useRouter(); 
+	let contactInput = ref("");
+	let ageInput = ref("");
+	let gradeInput = ref("");
+	let coursesInput = ref("");
+	const router = useRouter();
+
+	const gender = ["请选择您的性别","男", "女"];
+	const selectGender = ref(gender[0]);
+
 	
-	// 前端路由跳转
 	const login = () => {
+		if (!userInput.value || !contactInput.value || !ageInput.value || !gradeInput.value || !coursesInput.value) {
+			alert("请将表单填写完毕～")
+			return;
+		}
+		userGlobalData.value = {
+			name: userInput.value,
+			contact: contactInput.value,
+			gender: selectGender.value,
+			age: ageInput.value,
+			grade: gradeInput.value,
+			courses: coursesInput.value,
+		};
+		console.log(userGlobalData.value);
+		// 发送信号到后端存储用户数据
+		axios.post('/user',userGlobalData.value)
+		.then(()=>{
+			console.log('用户数据发送');
+		}).catch((err)=>{
+			console.log('用户数据发送出错：',err);
+		})
+		// 前端路由跳转
 		router.push({
-			path: "/formFill",
+			path: "/formFill"
 		});
-		userGlobalName.value = userInput.value;
 	};
 </script>
 
-<style>
+
+<style scoped>
 	/*以下全都是登录的css样式*/
 
 	#before-login {
@@ -49,8 +84,6 @@
 		position: absolute;
 		top: 30%;
 		left: 35%;
-		/* right: 0;
-    bottom: 10%; */
 		margin: auto;
 	}
 
@@ -59,7 +92,9 @@
 	}
 
 	#before-login input,
-	#before-login button {
+	#before-login button,
+	#before-login select,
+	#before-login textarea {
 		width: 100%;
 		margin-bottom: 10px;
 		padding: 10px;
@@ -87,13 +122,9 @@
 		top: 10px;
 		right: 10px;
 		width: 30px;
-		/* 设置宽度 */
 		height: 30px;
-		/* 设置高度 */
 		animation: swingIcon 4s infinite linear;
-		/* 使用动画，匀速摆动 */
 		transform-origin: top right;
-		/* 设置旋转原点为右上角 */
 	}
 
 	#icon {
@@ -113,7 +144,6 @@
 		height: 30px;
 		background-color: black;
 		transform-origin: top right;
-		/* 设置旋转原点为右上角 */
 	}
 
 	/* 定义 icon 动画 */
@@ -141,3 +171,4 @@
 		}
 	}
 </style>
+
