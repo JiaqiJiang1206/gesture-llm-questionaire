@@ -209,7 +209,7 @@
 							<input
 								type="text"
 								id="obj"
-								style="width: 95%; height: 30px; font-size: 16px"
+								style="width: 95%; height: 30px; font-size: 16px; border: solid;"
 							/>
 						</div>
 					</div>

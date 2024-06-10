@@ -36,7 +36,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 var port = process.env.PORT || 3000;
-app.use(express.static(path.join(__dirname, '../Vue/dist')));  // 设置静态文件目录
+app.use(express.static(path.join(__dirname, '../vue/dist')));  // 设置静态文件目录
 
 // 路由：将路由文件添加进中间件链
 const dataRouter = require("./routes/data.js");
