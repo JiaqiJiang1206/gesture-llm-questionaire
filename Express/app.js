@@ -25,7 +25,7 @@ app.all('*', function (req, res, next) {
 // 设置 Mongoose 连接
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const mongoDB = 'mongodb://localhost:27017/Questionaire';
+const mongoDB = 'mongodb://data:12345678900@111.229.123.153:27017/data';
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = global.Promise; // 使用 Node 自带的 Promise
 const db = mongoose.connection; // 连接
