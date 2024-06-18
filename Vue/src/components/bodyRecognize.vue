@@ -65,6 +65,7 @@ let canvasCtx = ref(null);
 async function createHandLandmarker() {
 	const vision = await FilesetResolver.forVisionTasks(
 		"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+		// "../../node_modules/@mediapipe/tasks-vision/wasm"
 	);
 	handLandmarker = await HandLandmarker.createFromOptions(vision, {
 		baseOptions: {
@@ -210,7 +211,7 @@ function toggleWebcam(event) {
 		}
 	}
 	if (!handLandmarker) {
-		alert("Hand Landmarker is not loaded yet!");
+		alert("请等待资源加载完成～");
 		return;
 	}
 	// 当摄像头正在运行时，点击按钮会停止录制
