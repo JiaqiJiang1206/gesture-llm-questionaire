@@ -43,11 +43,13 @@ const dataRouter = require("./routes/data.js");
 const usersRouter = require('./routes/users');
 const submitRouter = require('./routes/submit.js');
 const bodyDataRouter = require('./routes/bodyData.js');
+const audioDataRouter = require('./routes/audioData.js')
 
 app.use("/api/", dataRouter.router);
 app.use("/api/", usersRouter);
 app.use("/api/", submitRouter);
 app.use('/api/', bodyDataRouter);
+app.use("/api/", audioDataRouter);
 // app.use('/catalog', catalogRouter); // 将 catalog 路由添加进中间件链
 
 // // view engine setup
