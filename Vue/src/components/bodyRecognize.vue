@@ -57,6 +57,10 @@
 	let countdownInterval;
 	let animatedFrameId;
 	let allBodyResults; // 所有的身体数据
+	// 与录制视频相关的数据
+	let mediaRecorder;
+	let recordedChunks = [];
+	let audioStream;
 	// 定义响应式数据
 	let webcamRunning = ref(false);
 	let buttonText = ref("开始录制");
@@ -69,8 +73,8 @@
 	// 初始化手部检测器
 	async function createHandLandmarker() {
 		const vision = await FilesetResolver.forVisionTasks(
-			"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-			// "../../node_modules/@mediapipe/tasks-vision/wasm"
+			// "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+			"../../node_modules/@mediapipe/tasks-vision/wasm"
 		);
 		handLandmarker = await HandLandmarker.createFromOptions(vision, {
 			baseOptions: {
@@ -106,9 +110,7 @@
 
 	// 如果没有摄像头，提示用户
 	if (!hasGetUserMedia()) {
-		alert(
-			"Your browser cannot stream from your webcam. Please switch to Chrome."
-		);
+		alert("您的浏览器摄像头有问题。");
 	}
 
 	// 倒计时和开始录制的逻辑
@@ -167,7 +169,8 @@
 		navigator.mediaDevices
 			.getUserMedia({
 				video: true,
-				video: { width: 1280, height: 720 }
+				video: { width: 1280, height: 720 },
+				audio: true,
 			})
 			.then((stream) => {
 				video.value.srcObject = stream;
@@ -177,8 +180,8 @@
 					canvasElement.value.height = video.value.videoHeight;
 					canvasElement.value.style.display = "block";
 					canvasCtx.value.fillStyle = "#000000";
-					console.log('video.value.videoWidth', video.value.videoWidth);
-					console.log('video.value.videoHeight', video.value.videoHeight);
+					console.log("video.value.videoWidth", video.value.videoWidth);
+					console.log("video.value.videoHeight", video.value.videoHeight);
 
 					canvasCtx.value.fillRect(
 						0,
@@ -188,6 +191,7 @@
 					);
 					webcamRunning.value = true;
 					// toggleWebcam(); // 开始录制
+					startRecording(stream); // 开始录制视频音频流
 					predictWebcam();
 				};
 			});
@@ -198,6 +202,42 @@
 				sendPoseDataToDerver(oneHand, theOtherHand, pose);
 			}
 		}, 100);
+	}
+
+	// 开始录制视频和音频的函数
+	function startRecording(stream) {
+		// 创建 MediaRecorder 实例
+		mediaRecorder = new MediaRecorder(stream);
+
+		// 处理数据
+		mediaRecorder.ondataavailable = (event) => {
+			if (event.data.size > 0) {
+				recordedChunks.push(event.data);
+			}
+		};
+
+		// 处理录制结束
+		mediaRecorder.onstop = () => {
+			console.log("stop clicked");
+			const blob = new Blob(recordedChunks, {
+				// type: "video/webm; codecs=vp9",
+				type: "audio/ogg; codecs=opus",
+			});
+			sendAudioVideoDataToServer(blob); // 将数据发送到服务器
+			recordedChunks = []; // 清空数组以便下次录制
+			const videoURL = window.URL.createObjectURL(blob);
+			console.log("videoURL", videoURL);
+		};
+
+		// 开始录制
+		mediaRecorder.start();
+	}
+
+	// 停止录制视频和音频的函数
+	function stopRecording() {
+		if (mediaRecorder) {
+			mediaRecorder.stop();
+		}
 	}
 
 	// 点击按钮，开始录制或结束录制
@@ -226,15 +266,24 @@
 		// 当摄像头正在运行时，点击按钮会停止录制
 		if (webcamRunning.value === true) {
 			webcamRunning.value = false;
+			stopRecording();
 			console.log("第" + counts + "次录制结束");
 			ifSubmitButton.value = "block";
 			document.getElementById("exersizeWebcamButton").style.display = "block"; // 显示练习按钮
 			toggleButtonText(); // 切换按钮文字：停止录制 -> 开始录制
 			// 关闭摄像头
 			if (video.value.srcObject) {
+				// 停止所有的媒体流轨道，包括视频与音频
 				video.value.srcObject.getVideoTracks().forEach((track) => {
 					track.stop();
 				});
+				video.value.srcObject.getAudioTracks().forEach((track) => {
+					track.stop();
+				});
+				
+				// console.log(video.value.srcObject);
+				// video.value.srcObject.getTracks().forEach((track) => track.stop());
+
 				// 清除画布
 				canvasCtx.value.clearRect(
 					0,
@@ -279,7 +328,7 @@
 			}
 		}
 		if (!handLandmarker) {
-			alert("Hand Landmarker is not loaded yet!");
+			alert("请等待资源加载完成～");
 			return;
 		}
 		// 当摄像头正在运行时，点击按钮会停止录制
@@ -331,7 +380,7 @@
 					handLandmarker.detectForVideo(video.value, startTimeMs),
 					poseLandmarker.detectForVideo(video.value, startTimeMs),
 				]).then((theResults) => {
-					console.log(theResults);
+					// console.log(theResults);
 					allBodyResults = theResults;
 					results = theResults[0];
 					poseResults = theResults[1];
@@ -405,7 +454,7 @@
 			// oneHandData: oneHandData,
 			// theOtherHandData: theOtherHandData,
 			// PoseData: PoseData,
-			allBodyResults: allBodyResults
+			allBodyResults: allBodyResults,
 		};
 		// 将数据发送到服务器
 		axios
@@ -418,6 +467,26 @@
 			})
 			.catch((err) => {
 				console.log(err);
+			});
+	}
+
+	// 将视频音频发送到服务器
+	function sendAudioVideoDataToServer(blob) {
+		const formData = new FormData();
+		let fileName = userGlobalData.value.name + "_" + currentDataIndex.value + '_' + counts + ".webm";
+		formData.append("file", blob, fileName);
+
+		axios
+			.post("/upload", formData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+				},
+			})
+			.then((response) => {
+				console.log("Upload Success:", response.data);
+			})
+			.catch((error) => {
+				console.error("Upload Error:", error);
 			});
 	}
 </script>
