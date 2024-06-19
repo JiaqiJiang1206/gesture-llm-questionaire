@@ -16,12 +16,10 @@
 			</button>
 		</div>
 
-		<video style="display: none" id="webcam" autoplay></video>
-		<canvas id="output_canvas">
-			
-		</canvas>
-		<img src="../assets//img//pose.jpg" id="pose-img"/>
-		<button @click="reproduceBodyData">重新播放</button>
+		<video style="display: none" id="webcam" autoplay muted></video>
+		<canvas id="output_canvas"> </canvas>
+		<img src="../assets//img//pose.jpg" id="pose-img" />
+		<button id="replayButton" @click="reproduceBodyData">重新播放</button>
 	</div>
 </template>
 
@@ -37,6 +35,8 @@
 	import "../assets/handposejs/drawing_utils";
 	import "../assets/handposejs/hands";
 	import "../assets/handposejs/pose";
+
+	import pinyin from "pinyin";
 	// 导入数据收发相关
 	import axios from "../api/axios";
 	// 导入全局数据
@@ -177,7 +177,6 @@
 				audio: true,
 			})
 			.then((stream) => {
-				
 				video.value.srcObject = stream;
 				video.value.onloadedmetadata = () => {
 					video.value.play();
@@ -196,16 +195,14 @@
 					);
 					webcamRunning.value = true;
 					// toggleWebcam(); // 开始录制
-					startRecording(stream);// 开始录制音频
+					startRecording(stream); // 开始录制音频
 					predictWebcam();
 				};
 			});
 		// 显示画布以及启动定时器的其余代码
 		// 0.1 秒钟记录一次
 		bodyRecognizeTimer = setInterval(() => {
-			if (oneHand || theOtherHand || pose) {
-				sendPoseDataToDerver(oneHand, theOtherHand, pose);
-			}
+			sendPoseDataToDerver(oneHand, theOtherHand, pose);
 		}, 100);
 	}
 
@@ -375,7 +372,7 @@
 			document.getElementById("webcamButton").style.display = "none"; // 隐藏录制按钮
 			toggleButtonText(); // 切换按钮文字：开始练习 -> 停止练习
 			activateWebcamAndRecord(); // 激活摄像头并开始录制
-			window.clearInterval(bodyRecognizeTimer);
+			// window.clearInterval(bodyRecognizeTimer);
 		}
 	}
 
@@ -422,13 +419,13 @@
 					// console.log(canvasCtx.value);
 					// 画关节线
 					drawConnectors(canvasCtx.value, landmarks, HAND_CONNECTIONS, {
-						color: "#00FF00",
-						lineWidth: 1,
+						color: "#607448",
+						lineWidth: 5,
 					});
 					// 画关节点
 					drawLandmarks(canvasCtx.value, landmarks, {
-						color: "#FF0000",
-						lineWidth: 1,
+						color: "#f09035",
+						lineWidth: 5,
 						radius: 2,
 					});
 				}
@@ -437,13 +434,13 @@
 					// console.log(canvasCtx.value);
 					// 画关节线
 					drawConnectors(canvasCtx.value, landmarks, POSE_CONNECTIONS, {
-						color: "#00FF00",
-						lineWidth: 1,
+						color: "#607448",
+						lineWidth: 5,
 					});
 					// 画关节点
 					drawLandmarks(canvasCtx.value, landmarks, {
-						color: "#FF0000",
-						lineWidth: 1,
+						color: "#f09035",
+						lineWidth: 5,
 						radius: 2,
 					});
 				}
@@ -458,6 +455,7 @@
 	}
 
 	// 复现 allBodyResultsList 数据的函数
+	let reproduceTimer;
 	function reproduceBodyData() {
 		// for (let i = 0; i < allBodyResultsList.length; i++) {
 		// 	const handsData = allBodyResultsList[i][0];
@@ -465,10 +463,10 @@
 		// 	// 将数据绘制到画布上
 		// 	drawBodyDataToCanvas(handsData, PoseData);
 		// }
-
+		window.clearInterval(reproduceTimer);
 		// 每 0.1 秒在画布上画一个数据，并清空上一个画布，达到动画效果
 		let i = 0;
-		let reproduceTimer = setInterval(() => {
+		reproduceTimer = setInterval(() => {
 			if (i < allBodyResultsList.length) {
 				// 清空画布
 				canvasCtx.value.clearRect(
@@ -493,13 +491,13 @@
 			for (const landmarks of handsData.landmarks) {
 				// 画关节线
 				drawConnectors(canvasCtx.value, landmarks, HAND_CONNECTIONS, {
-					color: "#00FF00",
-					lineWidth: 1,
+					color: "#607448",
+					lineWidth: 5,
 				});
 				// 画关节点
 				drawLandmarks(canvasCtx.value, landmarks, {
-					color: "#FF0000",
-					lineWidth: 1,
+					color: "#f09035",
+					lineWidth: 5,
 					radius: 2,
 				});
 			}
@@ -507,12 +505,12 @@
 			for (const landmarks of PoseData.landmarks) {
 				// 画关节线
 				drawConnectors(canvasCtx.value, landmarks, POSE_CONNECTIONS, {
-					color: "#00FF00",
-					lineWidth: 1,
+					color: "#607448",
+					lineWidth: 5,
 				});
 				// 画关节点
 				drawLandmarks(canvasCtx.value, landmarks, {
-					color: "#FF0000",
+					color: "#f09035",
 					lineWidth: 1,
 					radius: 2,
 				});
@@ -521,7 +519,7 @@
 	}
 
 	// 将结果发送到 Express 服务器
-	function sendPoseDataToDerver(oneHandData, theOtherHandData, PoseData) {
+	function sendPoseDataToDerver() {
 		const bodyAndOtherData = {
 			counts: counts,
 			userName: userGlobalData.value.name,
@@ -532,6 +530,7 @@
 			// PoseData: PoseData,
 			allBodyResults: allBodyResults,
 		};
+		console.log(bodyAndOtherData);
 		// 将数据发送到服务器
 		axios
 			// .post("https://teachernonverbal.asia/savePoseData", {
@@ -540,23 +539,31 @@
 				// console.log("canvasElement.value.width:", canvasElement.value.width);
 				// console.log("canvasElement.value.height", canvasElement.value.height);
 				// console.log("PoseData", PoseData);
+				console.log(res);
 			})
 			.catch((err) => {
 				console.log(err);
 			});
+
 	}
 
 	// 将视频音频发送到服务器
 	function sendAudioVideoDataToServer(blob) {
 		const formData = new FormData();
+		// 将汉字转换为拼音
+		const pinyinArray = pinyin(userGlobalData.value.name, {
+			style: pinyin.STYLE_NORMAL, // 设置拼音风格
+			heteronym: false, // 禁用多音字
+		});
+		console.log("pinyin", pinyinArray);
+		const pinyinString = pinyinArray.join("_");
 		let fileName =
-			userGlobalData.value.name +
-			"_" +
-			currentDataIndex.value +
-			"_" +
-			counts +
-			".webm";
-		formData.append("file", blob, fileName);
+			pinyinString + "_" + currentDataIndex.value + "_" + counts + ".webm";
+
+		// 对文件名进行 URL 编码
+		let encodedFileName = encodeURIComponent(fileName);
+		console.log("encodedFileName", fileName);
+		formData.append("file", blob, encodedFileName);
 
 		axios
 			.post("/upload", formData, {
@@ -607,7 +614,8 @@
 
 	#webcamButton,
 	#exersizeWebcamButton,
-	#nextButton {
+	#nextButton,
+	#replayButton {
 		background-color: #607448;
 		color: white;
 		border: none;

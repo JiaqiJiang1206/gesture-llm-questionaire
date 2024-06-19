@@ -15,6 +15,8 @@
     "axios": "^1.7.2",
     "js-confetti": "^0.12.0",
     "pinia": "^2.1.7",
+    "pinyin": "^4.0.0-alpha.0",
+    "segmentit": "^2.0.3",
     "vue": "^3.4.21",
     "vue-confetti": "^2.3.0",
     "vue-router": "^4.3.2"

@@ -1,5 +1,5 @@
 <template>
-	<div class="container" style="max-width: 100vw;">
+	<div class="container" style="max-width: 100vw">
 		<div class="column_left">
 			<div class="one_block_left">
 				<p style="padding-left: 2%; font-size: 18px; font-weight: bold">
@@ -17,7 +17,9 @@
 					"
 				>
 					📄视频录制说明：<br />
-					1️⃣ 练习直到满意，练习与录制时请让上半身（包含头部与手部）出现在镜头中，您与摄像头需要保持约一臂的距离 <br />
+					1️⃣
+					练习直到满意，练习与录制时请让上半身（包含头部与手部）出现在镜头中，您与摄像头需要保持约一臂的距离
+					<br />
 					2️⃣ 点击开始录制，我们有三秒的倒计时321 <br />
 					3️⃣ 模仿视频中教师的行为：包含教师所说的话与教师的动作 <br />
 					4️⃣ 点击停止录制 <br />
@@ -40,7 +42,6 @@
 					style="width: 100%; height: 100%; padding-left: 6%"
 				></video>
 			</div>
-			
 		</div>
 		<div class="column_right" style="padding-left: 8%">
 			<bodyRecognize v-if="showFlag" @complete-body-record="switchShow" />
@@ -209,7 +210,7 @@
 							<input
 								type="text"
 								id="obj"
-								style="width: 95%; height: 30px; font-size: 16px; border: solid;"
+								style="width: 95%; height: 30px; font-size: 16px; border: solid"
 							/>
 						</div>
 					</div>
@@ -219,29 +220,33 @@
 							<p style="font-size: 18px; font-weight: bold; display: inline">
 								❇️任务负荷量表<br />
 							</p>
-						</div>
-						<div class="slider-container">
-							<label>体力需求<br /></label>
-							<p style="font-size: 14px; display: inline; margin-top: 3px">
-								请您选择：完成这项手势需要多少体力活动？任务是轻松还是艰巨、缓慢还是轻快、松弛还是剧烈、休息还是劳累？<br />
+							<p
+								style="
+									display: inline;
+									text-align: left;
+									font-weight: lighter;
+									font-size: 14px;
+								"
+							>
+							完成这个手势需要多大程度的体力活动？这个过程是轻松、缓慢的、不费力的、可喘息的？还是有挑战性、迅速的、费力的、劳累的？
 							</p>
-
-							<div
-								class="slider-container1"
-								id="sliderContainer1"
-								@click="handleSlider"
-							>
-								<div class="slider" id="slider"><br /></div>
-								<span id="sliderValue">0</span>
+						</div>
+						<div class="physical-container">
+							<div class="scale">
+								<template v-for="i in 21" :key="i">
+									<div :class="['line', i % 2 === 1 ? 'long' : 'short']"></div>
+									<div
+										v-if="i < 21"
+										class="segment"
+										:data-value="i - 1"
+										@click="handleSegment(i - 1)"
+									></div>
+								</template>
 							</div>
-
-							<div
-								class="slider-labels"
-								style="display: flex; justify-content: space-between"
-							>
-								<span style="border: none">非常低</span>
-								<span style="border: none">非常高</span>
-							</div>
+						</div>
+						<div style="display: flex; justify-content: space-between; transform: translateX(-3%) translateY(-40%);">
+							<span class="label-low">非常低</span>
+							<span class="label-high">非常高</span>
 						</div>
 					</div>
 					<div class="button_container">
@@ -258,7 +263,7 @@
 <script setup>
 	import voiceButton from "../components/voiceButton.vue";
 	import wordSelect from "../components/wordSelect.vue";
-	import { onMounted, ref } from "vue";
+	import { nextTick, onMounted, ref } from "vue";
 	// 获取数据
 	import axios from "../api/axios";
 	import { useRouter } from "vue-router";
@@ -285,6 +290,23 @@
 	let teaching_text = ref("");
 	let teacher_video = ref("");
 	let temp = "";
+	// 任务负荷
+	let taskLoad = 0;
+
+	function handleSegment(index) {
+		// 设置第 index 个 segment 背景为灰色
+		
+		taskLoad = index + 1;
+		console.log('taskLoad', taskLoad);
+		const segments = document.querySelectorAll(".segment");
+		segments.forEach((segment, i) => {
+			if (i === index) {
+				segment.classList.add("active");
+			} else {
+				segment.classList.remove("active");
+			}
+		});
+	}
 
 	// 获取并解析数据
 	// axios.get("https://teachernonverbal.asia/data").then((res) => {
@@ -349,9 +371,6 @@
 			ifDependency.value = false;
 		}
 	}
-
-	// 任务负荷
-	let taskLoad = 0;
 
 	// 点击下一个按钮需要处理的逻辑
 	let curPage = 0;
@@ -436,7 +455,6 @@
 					oneOrTwoHand = "";
 					// 任务负荷量
 					taskLoad = 0;
-					sliderValue.innerHTML = 0;
 					// 清除选项状态
 					document.querySelectorAll("input[type=radio]").forEach((radio) => {
 						radio.checked = false;
@@ -452,7 +470,7 @@
 					console.log("当前页数", curPage);
 					if (curPage === 30) {
 						router.push({
-							path: "/endPage"
+							path: "/endPage",
 						});
 					} else {
 						// 切换到下一个数据
@@ -497,38 +515,11 @@
 		return videoUrl;
 	}
 	// 具身数据处理逻辑
+
 	// 可否单手 任务负荷 依赖
 
-	function handleSlider(event) {
-		var sliderContainer = document.getElementById("sliderContainer1");
-		var slider = document.getElementById("slider");
-		var sliderValue = document.getElementById("sliderValue");
-
-		var numSteps = 21;
-		let currentStep = 0;
-
-		if (sliderContainer) {
-			function updateSliderPosition() {
-				var stepWidth = sliderContainer.clientWidth / numSteps;
-				var newPosition = currentStep * stepWidth;
-				slider.style.width = newPosition + "px";
-				sliderValue.innerHTML = currentStep;
-				taskLoad = sliderValue.innerHTML;
-				console.log(taskLoad);
-			}
-			var clickX = event.clientX - sliderContainer.getBoundingClientRect().left;
-			var stepWidth = sliderContainer.clientWidth / numSteps;
-			var newStep = Math.round(clickX / stepWidth);
-			if (newStep >= 0 && newStep <= numSteps) {
-				currentStep = newStep;
-				updateSliderPosition();
-				// console.log("当前刻度值：" + currentStep);
-			}
-		}
-	}
-
 	onMounted(() => {
-		handleSlider();
+		// handleSlider();
 	});
 </script>
 
@@ -664,57 +655,42 @@
 		font-weight: bold;
 		color: black;
 	}
-	.slider-container1 {
-		width: 100%; /* 容器宽度 */
-		height: 20px; /* 更新容器高度 */
-		background-color: #e0e0e0; /* 灰色背景 */
-		background: repeating-linear-gradient(
-			to right,
-			#000 0%,
-			#000 1px,
-			transparent 1px,
-			transparent 5%
-		); /* 黑色刻度线作为背景 */
-		position: relative;
-		cursor: pointer;
-		overflow: hidden; /* 防止内容溢出 */
-	}
-
-	.slider {
-		height: 6px; /* 更新滑动条高度 */
-		background: #607448; /* 滑动条颜色 */
-		transition: width 0.3s;
-		position: absolute;
-		bottom: 7px; /* 更新垂直位置，以垂直居中滑动条 */
-		z-index: 1; /* 确保滑动条在最前面 */
-	}
-
-	#sliderValue {
-		position: absolute;
-		top: -50%;
-		left: 50%;
-		transform: translateX(-50%);
-		z-index: 2; /* 保证可见度 */
-	}
-	.slider-container {
-		margin: 10px 0; /* 减少上下边距 */
+	.physical-container {
 		display: flex;
-		flex-direction: column;
-		align-items: left;
-	}
-
-	.choices {
-		display: flex;
-		flex-grow: 1;
-		justify-content: space-around;
-	}
-
-	.choices label {
-		margin: 0 1px; /* 减少单选按钮之间的间距 */
-	}
-	.result-card-container {
-		display: flex;
-		justify-content: center;
 		align-items: center;
+		justify-content: center;
+		margin-top: 10px;
+		margin-bottom: 36px;
+	}
+	.scale {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		width: 100%;
+		height: 20px; /* Set a height for demonstration */
+		border: solid 1px black;
+		transform: translateX(-2%);
+	}
+
+	.line {
+		width: 2px;
+		background-color: black;
+	}
+
+	.line.long {
+		height: 20px;
+	}
+
+	.line.short {
+		height: 10px;
+	}
+	.segment {
+		width: 11%; /* This sets the width of each segment to 10% of the parent (scale) */
+		height: 20px;
+		cursor: pointer;
+	}
+
+	.segment.active {
+		background-color: gray;
 	}
 </style>
