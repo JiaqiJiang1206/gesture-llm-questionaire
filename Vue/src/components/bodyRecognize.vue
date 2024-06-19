@@ -227,6 +227,10 @@
 			recordedChunks = []; // 清空数组以便下次录制
 			const videoURL = window.URL.createObjectURL(blob);
 			console.log("videoURL", videoURL);
+			// 在短时间后释放URL对象以释放内存
+			setTimeout(() => {
+				window.URL.revokeObjectURL(videoURL);
+			}, 100);
 		};
 
 		// 开始录制
@@ -280,7 +284,7 @@
 				video.value.srcObject.getAudioTracks().forEach((track) => {
 					track.stop();
 				});
-				
+
 				// console.log(video.value.srcObject);
 				// video.value.srcObject.getTracks().forEach((track) => track.stop());
 
@@ -473,7 +477,13 @@
 	// 将视频音频发送到服务器
 	function sendAudioVideoDataToServer(blob) {
 		const formData = new FormData();
-		let fileName = userGlobalData.value.name + "_" + currentDataIndex.value + '_' + counts + ".webm";
+		let fileName =
+			userGlobalData.value.name +
+			"_" +
+			currentDataIndex.value +
+			"_" +
+			counts +
+			".webm";
 		formData.append("file", blob, fileName);
 
 		axios
