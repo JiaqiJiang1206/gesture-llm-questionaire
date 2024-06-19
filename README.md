@@ -21,4 +21,12 @@
 widthPx = x * width
 heightPx = y * height
 ```
+## 文件解读
 
+[/express/uploads/](/express/uploads/)中的文件名含义：用户名_数据id_第几次录制产生的数据
+
+如 1840_10_1.mp3 的含义为 1840 用户在录制 id 为 10 的数据时录制的第一条音频数据。
+
+[/express/bodyData/](/express/bodyData/)中的文件的含义为：用户名_数据id
+
+如 2107_6.json 的含义为 2107 用户在录制 id 为 6 的数据时录制的第一条身体数据。

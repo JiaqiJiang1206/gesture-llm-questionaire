@@ -17,7 +17,11 @@
 		</div>
 
 		<video style="display: none" id="webcam" autoplay></video>
-		<canvas id="output_canvas"></canvas>
+		<canvas id="output_canvas">
+			
+		</canvas>
+		<img src="../assets//img//pose.jpg" id="pose-img"/>
+		<button @click="reproduceBodyData">重新播放</button>
 	</div>
 </template>
 
@@ -57,10 +61,10 @@
 	let countdownInterval;
 	let animatedFrameId;
 	let allBodyResults; // 所有的身体数据
+	let allBodyResultsList = []; // 所有的身体数据列表
 	// 与录制视频相关的数据
 	let mediaRecorder;
 	let recordedChunks = [];
-	let audioStream;
 	// 定义响应式数据
 	let webcamRunning = ref(false);
 	let buttonText = ref("开始录制");
@@ -173,6 +177,7 @@
 				audio: true,
 			})
 			.then((stream) => {
+				
 				video.value.srcObject = stream;
 				video.value.onloadedmetadata = () => {
 					video.value.play();
@@ -191,7 +196,7 @@
 					);
 					webcamRunning.value = true;
 					// toggleWebcam(); // 开始录制
-					startRecording(stream); // 开始录制视频音频流
+					startRecording(stream);// 开始录制音频
 					predictWebcam();
 				};
 			});
@@ -302,7 +307,9 @@
 				window.clearInterval(bodyRecognizeTimer);
 				window.cancelAnimationFrame(animatedFrameId);
 			}
+			reproduceBodyData(); // 复现所有的身体数据
 		} else {
+			allBodyResultsList = []; // 清空所有的身体数据列表
 			counts++; // 记录录制次数
 			webcamRunning.value = true; // 切换摄像头状态
 			ifSubmitButton.value = "none"; // 隐藏提交按钮
@@ -361,6 +368,7 @@
 				window.cancelAnimationFrame(animatedFrameId);
 			}
 		} else {
+			allBodyResultsList = []; // 清空所有的身体数据列表
 			exersizeCounts++;
 			webcamRunning.value = true; // 切换摄像头状态
 			ifSubmitButton.value = "none"; // 隐藏提交按钮
@@ -386,6 +394,7 @@
 				]).then((theResults) => {
 					// console.log(theResults);
 					allBodyResults = theResults;
+					allBodyResultsList.push(theResults);
 					results = theResults[0];
 					poseResults = theResults[1];
 				});
@@ -438,13 +447,76 @@
 						radius: 2,
 					});
 				}
-				oneHand = results.landmarks[0];
-				theOtherHand = results.landmarks[1];
-				pose = poseResults.landmarks[0];
+				// oneHand = results.landmarks[0];
+				// theOtherHand = results.landmarks[1];
+				// pose = poseResults.landmarks[0];
 			}
-			canvasCtx.value.restore();
+			canvasCtx.value.restore(); // 恢复画布
 
 			animatedFrameId = window.requestAnimationFrame(predictWebcam);
+		}
+	}
+
+	// 复现 allBodyResultsList 数据的函数
+	function reproduceBodyData() {
+		// for (let i = 0; i < allBodyResultsList.length; i++) {
+		// 	const handsData = allBodyResultsList[i][0];
+		// 	const PoseData = allBodyResultsList[i][1];
+		// 	// 将数据绘制到画布上
+		// 	drawBodyDataToCanvas(handsData, PoseData);
+		// }
+
+		// 每 0.1 秒在画布上画一个数据，并清空上一个画布，达到动画效果
+		let i = 0;
+		let reproduceTimer = setInterval(() => {
+			if (i < allBodyResultsList.length) {
+				// 清空画布
+				canvasCtx.value.clearRect(
+					0,
+					0,
+					canvasElement.value.width,
+					canvasElement.value.height
+				);
+				const handsData = allBodyResultsList[i][0];
+				const PoseData = allBodyResultsList[i][1];
+				// 将数据绘制到画布上
+				drawBodyDataToCanvas(handsData, PoseData);
+				i++;
+			} else {
+				clearInterval(reproduceTimer);
+			}
+		}, 50);
+
+		// 画手部关节及连线
+		function drawBodyDataToCanvas(handsData, PoseData) {
+			// 画手部关节及连线
+			for (const landmarks of handsData.landmarks) {
+				// 画关节线
+				drawConnectors(canvasCtx.value, landmarks, HAND_CONNECTIONS, {
+					color: "#00FF00",
+					lineWidth: 1,
+				});
+				// 画关节点
+				drawLandmarks(canvasCtx.value, landmarks, {
+					color: "#FF0000",
+					lineWidth: 1,
+					radius: 2,
+				});
+			}
+			// 画身体关节及连线
+			for (const landmarks of PoseData.landmarks) {
+				// 画关节线
+				drawConnectors(canvasCtx.value, landmarks, POSE_CONNECTIONS, {
+					color: "#00FF00",
+					lineWidth: 1,
+				});
+				// 画关节点
+				drawLandmarks(canvasCtx.value, landmarks, {
+					color: "#FF0000",
+					lineWidth: 1,
+					radius: 2,
+				});
+			}
 		}
 	}
 
@@ -514,7 +586,8 @@
 		align-items: center;
 	} */
 	#output_canvas {
-		margin-top: 2%;
+		position: absolute;
+		margin-top: 6%;
 		height: 640px;
 		width: 480px;
 		transform: scaleX(-1);
@@ -550,5 +623,13 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+	}
+
+	#pose-img {
+		display: absolute;
+		width: 480px;
+		height: 640px;
+		z-index: 99;
+		margin-top: 5%;
 	}
 </style>
