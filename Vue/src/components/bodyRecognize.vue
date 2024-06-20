@@ -77,8 +77,8 @@
 	// 初始化手部检测器
 	async function createHandLandmarker() {
 		const vision = await FilesetResolver.forVisionTasks(
-			// "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-			"../../node_modules/@mediapipe/tasks-vision/wasm"
+			"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+			// "../../node_modules/@mediapipe/tasks-vision/wasm"
 		);
 		handLandmarker = await HandLandmarker.createFromOptions(vision, {
 			baseOptions: {
