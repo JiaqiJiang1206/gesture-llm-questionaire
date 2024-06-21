@@ -19,7 +19,13 @@
 		<video style="display: none" id="webcam" autoplay muted></video>
 		<canvas id="output_canvas"> </canvas>
 		<img src="../assets//img//pose.jpg" id="pose-img" />
-		<button id="replayButton" @click="reproduceBodyData">重新播放</button>
+		<button
+			id="replayButton"
+			@click="reproduceBodyData"
+			:style="{ display: ifSubmitButton }"
+		>
+			重新播放
+		</button>
 	</div>
 </template>
 
@@ -79,7 +85,6 @@
 		const vision = await FilesetResolver.forVisionTasks(
 			"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
 			// "../../node_modules/@mediapipe/tasks-vision/wasm"
-			
 		);
 		handLandmarker = await HandLandmarker.createFromOptions(vision, {
 			baseOptions: {
@@ -229,7 +234,6 @@
 			sendAudioVideoDataToServer(blob); // 将数据发送到服务器
 			recordedChunks = []; // 清空数组以便下次录制
 			const videoURL = window.URL.createObjectURL(blob);
-			console.log("videoURL", videoURL);
 			// 在短时间后释放URL对象以释放内存
 			setTimeout(() => {
 				window.URL.revokeObjectURL(videoURL);
@@ -287,8 +291,6 @@
 				video.value.srcObject.getAudioTracks().forEach((track) => {
 					track.stop();
 				});
-
-				// console.log(video.value.srcObject);
 				// video.value.srcObject.getTracks().forEach((track) => track.stop());
 
 				// 清除画布
@@ -349,6 +351,9 @@
 			// 关闭摄像头
 			if (video.value.srcObject) {
 				video.value.srcObject.getVideoTracks().forEach((track) => {
+					track.stop();
+				});
+				video.value.srcObject.getAudioTracks().forEach((track) => {
 					track.stop();
 				});
 				// 清除画布
@@ -531,7 +536,6 @@
 			// PoseData: PoseData,
 			allBodyResults: allBodyResults,
 		};
-		console.log(bodyAndOtherData);
 		// 将数据发送到服务器
 		axios
 			// .post("https://teachernonverbal.asia/savePoseData", {
@@ -545,7 +549,6 @@
 			.catch((err) => {
 				console.log(err);
 			});
-
 	}
 
 	// 将视频音频发送到服务器
