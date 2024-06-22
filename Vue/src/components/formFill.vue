@@ -468,7 +468,7 @@
 					// 下一页
 					curPage++;
 					console.log("当前页数", curPage);
-					if (curPage === 30) {
+					if (curPage === 20) {
 						router.push({
 							path: "/endPage",
 						});
