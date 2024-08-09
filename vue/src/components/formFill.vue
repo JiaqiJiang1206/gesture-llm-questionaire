@@ -310,22 +310,22 @@
 
 	// 获取并解析数据
 	// axios.get("https://teachernonverbal.asia/data").then((res) => {
-	axios.get("/data").then((res) => {
-		// 传输过来的数据是一个对象
-		formData = res.data;
-		console.log(formData);
-		// 去掉 formData.text 中的空格
-		temp = formData.text.replace(/\s+/g, "");
-		teaching_text.value = temp;
-		// 转换 base64 编码的视频为视频路径
-		currentDataText.value = temp; // 传递数据到 store
-		currentDataIndex.value = formData.id;
-		teacher_video.value = base64UrlToFile(
-			formData.video,
-			"video.mp4",
-			"video/mp4"
-		);
-	});
+	// axios.get("/data").then((res) => {
+	// 	// 传输过来的数据是一个对象
+	// 	formData = res.data;
+	// 	console.log(formData);
+	// 	// 去掉 formData.text 中的空格
+	// 	temp = formData.text.replace(/\s+/g, "");
+	// 	teaching_text.value = temp;
+	// 	// 转换 base64 编码的视频为视频路径
+	// 	currentDataText.value = temp; // 传递数据到 store
+	// 	currentDataIndex.value = formData.id;
+	// 	teacher_video.value = base64UrlToFile(
+	// 		formData.video,
+	// 		"video.mp4",
+	// 		"video/mp4"
+	// 	);
+	// });
 
 	// 选择的开始词索引和结束词索引
 	const startAndEndIndex = ref({ startIndex: -1, endIndex: -1 });

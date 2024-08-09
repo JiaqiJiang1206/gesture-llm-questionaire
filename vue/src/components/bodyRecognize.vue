@@ -537,18 +537,18 @@
 			allBodyResults: allBodyResults,
 		};
 		// 将数据发送到服务器
-		axios
-			// .post("https://teachernonverbal.asia/savePoseData", {
-			.post("/savePoseData", bodyAndOtherData)
-			.then((res) => {
-				// console.log("canvasElement.value.width:", canvasElement.value.width);
-				// console.log("canvasElement.value.height", canvasElement.value.height);
-				// console.log("PoseData", PoseData);
-				console.log(res);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
+		// axios
+		// 	// .post("https://teachernonverbal.asia/savePoseData", {
+		// 	.post("/savePoseData", bodyAndOtherData)
+		// 	.then((res) => {
+		// 		// console.log("canvasElement.value.width:", canvasElement.value.width);
+		// 		// console.log("canvasElement.value.height", canvasElement.value.height);
+		// 		// console.log("PoseData", PoseData);
+		// 		console.log(res);
+		// 	})
+		// 	.catch((err) => {
+		// 		console.log(err);
+		// 	});
 	}
 
 	// 将视频音频发送到服务器
